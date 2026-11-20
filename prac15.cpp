@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 using namespace std;
 
 const int MAX_NODES = 1000;
@@ -92,13 +92,6 @@ Node* searchRecursive(Node* root, int key, int& comparisons,
         visited, path, pathCount);
 }
 
-Node* findMin(Node* root) {
-    while (root != nullptr && root->left != nullptr)
-        root = root->left;
-
-    return root;
-}
-
 bool deleteNode(Node*& root, int key, int& comparisons, int& visited) {
     Node** link = &root;
 
@@ -146,6 +139,49 @@ bool deleteNode(Node*& root, int key, int& comparisons, int& visited) {
 
     delete successor;
     freed++;
+
+    return true;
+}
+
+bool checkStructure(Node* root) {
+    if (root == nullptr)
+        return true;
+
+    Node* stack[MAX_NODES];
+    Node* visited[MAX_NODES];
+
+    int top = 0;
+    int visitedCount = 0;
+
+    stack[top++] = root;
+
+    while (top > 0) {
+        Node* current = stack[--top];
+
+        for (int i = 0; i < visitedCount; i++) {
+            if (visited[i] == current)
+                return false;
+        }
+
+        if (visitedCount >= MAX_NODES)
+            return false;
+
+        visited[visitedCount++] = current;
+
+        if (current->left != nullptr) {
+            if (top >= MAX_NODES)
+                return false;
+
+            stack[top++] = current->left;
+        }
+
+        if (current->right != nullptr) {
+            if (top >= MAX_NODES)
+                return false;
+
+            stack[top++] = current->right;
+        }
+    }
 
     return true;
 }
@@ -293,6 +329,7 @@ bool runTest(int number, const char* name, int initial[],
 
     bool ok = setupOK && foundCorrect && operationCorrect &&
         sameArray(actual, actualCount, expected, expectedCount) &&
+        checkStructure(root) &&
         validateBST(root, -2147483649LL, 2147483648LL);
 
     cout << "Test " << number << ": " << (ok ? "PASS" : "FAIL")
@@ -359,8 +396,8 @@ void runVariant() {
     printArray("After insertion: ", result, count);
 
     cout << "BST check: "
-        << (validateBST(root, -2147483649LL, 2147483648LL)
-            ? "OK" : "ERROR") << '\n';
+        << (validateBST(root, -2147483649LL, 2147483648LL) &&
+            checkStructure(root) ? "OK" : "ERROR") << '\n';
 
     comparisons = 0;
     visited = 0;
@@ -377,8 +414,8 @@ void runVariant() {
     printArray("After deletion: ", result, count);
 
     cout << "BST check: "
-        << (validateBST(root, -2147483649LL, 2147483648LL)
-            ? "OK" : "ERROR") << '\n';
+        << (validateBST(root, -2147483649LL, 2147483648LL) &&
+            checkStructure(root) ? "OK" : "ERROR") << '\n';
 
     cout << "Nodes: " << countNodes(root)
         << " | Height: " << height(root) << '\n';
